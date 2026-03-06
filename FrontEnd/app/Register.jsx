@@ -1,45 +1,22 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { COLORS, FONTS, RADIUS } from "../constants/colors";
 
-export default function AuthScreens() {
-  const { screen } = useLocalSearchParams();
-  const [activeScreen, setActiveScreen] = useState(
-    screen === "Login" ? "Login" : "Register",
-  );
-
-  useEffect(() => {
-    if (screen === "Login") {
-      setActiveScreen("Login");
-    } else if (screen === "Register") {
-      setActiveScreen("Register");
-    }
-  }, [screen]);
-
-  return activeScreen === "Login" ? (
-    <LoginScreen setActiveScreen={setActiveScreen} />
-  ) : (
-    <RegisterScreen setActiveScreen={setActiveScreen} />
-  );
-}
-
-// ============================================
-// REGISTER SCREEN
-// ============================================
-function RegisterScreen({ setActiveScreen }) {
+export default function RegisterScreen() {
   const router = useRouter();
   const [nume, setNume] = useState("");
   const [email, setEmail] = useState("");
@@ -70,7 +47,7 @@ function RegisterScreen({ setActiveScreen }) {
       const parts = nume.trim().split(" ");
       const firstName = parts[0];
       const lastName = parts.slice(1).join(" ");
-      const res = await fetch("http://192.168.1.1:3000/api/register", {
+      const res = await fetch("http://192.168.1.1:3000/api/Register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password: parola }),
@@ -110,7 +87,6 @@ function RegisterScreen({ setActiveScreen }) {
           <View style={styles.card}>
             <CampInput
               label="Nume complet"
-              icon="👤"
               placeholder="ex: Maria Popescu"
               value={nume}
               onChangeText={(t) => {
@@ -121,7 +97,6 @@ function RegisterScreen({ setActiveScreen }) {
             />
             <CampInput
               label="Email"
-              icon="📧"
               placeholder="adresa@email.com"
               value={email}
               onChangeText={(t) => {
@@ -134,7 +109,6 @@ function RegisterScreen({ setActiveScreen }) {
             />
             <CampInput
               label="Parolă"
-              icon="🔒"
               placeholder="min. 6 caractere"
               value={parola}
               onChangeText={(t) => {
@@ -145,15 +119,16 @@ function RegisterScreen({ setActiveScreen }) {
               eroare={erori.parola}
               iconDreapta={
                 <TouchableOpacity onPress={() => setAratParola(!aratParola)}>
-                  <Text style={{ fontSize: 18 }}>
-                    {aratParola ? "🙈" : "👁️"}
-                  </Text>
+                  <Ionicons
+                    name={aratParola ? "eye-off-outline" : "eye-outline"}
+                    size={22}
+                    color={COLORS.textLight}
+                  />
                 </TouchableOpacity>
               }
             />
             <CampInput
               label="Confirmă parola"
-              icon="🔒"
               placeholder="repetă parola"
               value={confirmaParola}
               onChangeText={(t) => {
@@ -201,7 +176,7 @@ function RegisterScreen({ setActiveScreen }) {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => setActiveScreen("Login")}
+              onPress={() => router.push("/Login")}
               style={styles.linkRow}
             >
               <Text style={styles.linkText}>
@@ -215,133 +190,6 @@ function RegisterScreen({ setActiveScreen }) {
   );
 }
 
-// ============================================
-// LOGIN SCREEN
-// ============================================
-function LoginScreen({ setActiveScreen }) {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [parola, setParola] = useState("");
-  const [aratParola, setAratParola] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [erori, setErori] = useState({});
-
-  const handleLogin = async () => {
-    let e = {};
-    if (!email.includes("@")) e.email = "Email invalid";
-    if (!parola) e.parola = "Parola este obligatorie";
-    setErori(e);
-    if (Object.keys(e).length > 0) return;
-
-    setLoading(true);
-    try {
-      const res = await fetch("http://192.168.1.1:3000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: parola }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        router.replace({
-          pathname: "/MainScreens",
-          params: { parinte: JSON.stringify(data.parinte) },
-        });
-      } else {
-        Alert.alert("Eroare", data.mesaj || "Email sau parolă greșită");
-      }
-    } catch {
-      Alert.alert("Eroare", "Nu mă pot conecta la server");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.header}>
-            <Text style={styles.logo}>Kinder</Text>
-            <Text style={styles.title}>Bun venit! 👋</Text>
-            <Text style={styles.subtitle}>Intră în contul tău de părinte</Text>
-          </View>
-
-          <View style={styles.card}>
-            <CampInput
-              label="Email"
-              icon="📧"
-              placeholder="adresa@email.com"
-              value={email}
-              onChangeText={(t) => {
-                setEmail(t);
-                setErori({ ...erori, email: null });
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              eroare={erori.email}
-            />
-            <CampInput
-              label="Parolă"
-              icon="🔒"
-              placeholder="parola ta"
-              value={parola}
-              onChangeText={(t) => {
-                setParola(t);
-                setErori({ ...erori, parola: null });
-              }}
-              secureTextEntry={!aratParola}
-              eroare={erori.parola}
-              iconDreapta={
-                <TouchableOpacity onPress={() => setAratParola(!aratParola)}>
-                  <Text style={{ fontSize: 18 }}>
-                    {aratParola ? "🙈" : "👁️"}
-                  </Text>
-                </TouchableOpacity>
-              }
-            />
-
-            <TouchableOpacity style={styles.linkRow}>
-              <Text style={[styles.link, { textAlign: "right" }]}>
-                Ai uitat parola?
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.btnPrimary, loading && { opacity: 0.7 }]}
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.btnText}>Intră în cont →</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setActiveScreen("Register")}
-              style={styles.linkRow}
-            >
-              <Text style={styles.linkText}>
-                Nu ai cont? <Text style={styles.link}>Creează unul</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-}
-
-// ============================================
-// COMPONENTA REUTILIZABILĂ: Câmp Input
-// ============================================
 function CampInput({ label, icon, iconDreapta, eroare, ...props }) {
   return (
     <View style={styles.campContainer}>

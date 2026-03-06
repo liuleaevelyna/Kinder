@@ -36,24 +36,14 @@ export default function WelcomeScreen() {
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={styles.btnPrimary}
-            onPress={() =>
-              router.push({
-                pathname: "/AuthScreens",
-                params: { screen: "Register" },
-              })
-            }
+            onPress={() => router.push("/Register")}
           >
             <Text style={styles.btnPrimaryText}>Creare cont</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.btnSecondary}
-            onPress={() =>
-              router.push({
-                pathname: "/AuthScreens",
-                params: { screen: "Login" },
-              })
-            }
+            onPress={() => router.push("/Login")}
           >
             <Text style={styles.btnSecondaryText}>Autentificare</Text>
           </TouchableOpacity>
