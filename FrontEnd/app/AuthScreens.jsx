@@ -1,21 +1,50 @@
-// ============================================
-// REGISTER SCREEN - Înregistrare Părinte
-// Câmpuri: Nume complet, Email, Parolă, Confirmare parolă
-// Corespunde tabelei: Parents (First_name, Last_name, Email, Password_p)
-// ============================================
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, SafeAreaView, KeyboardAvoidingView,
-  Platform, ScrollView, Alert, ActivityIndicator,
-} from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../constants/colors';
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { COLORS, FONTS, RADIUS } from "../constants/colors";
 
-export default function RegisterScreen({ navigation }) {
-  const [nume, setNume] = useState('');
-  const [email, setEmail] = useState('');
-  const [parola, setParola] = useState('');
-  const [confirmaParola, setConfirmaParola] = useState('');
+export default function AuthScreens() {
+  const { screen } = useLocalSearchParams();
+  const [activeScreen, setActiveScreen] = useState(
+    screen === "Login" ? "Login" : "Register",
+  );
+
+  useEffect(() => {
+    if (screen === "Login") {
+      setActiveScreen("Login");
+    } else if (screen === "Register") {
+      setActiveScreen("Register");
+    }
+  }, [screen]);
+
+  return activeScreen === "Login" ? (
+    <LoginScreen setActiveScreen={setActiveScreen} />
+  ) : (
+    <RegisterScreen setActiveScreen={setActiveScreen} />
+  );
+}
+
+// ============================================
+// REGISTER SCREEN
+// ============================================
+function RegisterScreen({ setActiveScreen }) {
+  const router = useRouter();
+  const [nume, setNume] = useState("");
+  const [email, setEmail] = useState("");
+  const [parola, setParola] = useState("");
+  const [confirmaParola, setConfirmaParola] = useState("");
   const [acordPrivacitate, setAcordPrivacitate] = useState(false);
   const [aratParola, setAratParola] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,16 +52,13 @@ export default function RegisterScreen({ navigation }) {
 
   const valideaza = () => {
     let e = {};
-    if (!nume.trim() || nume.trim().split(' ').length < 2)
-      e.nume = 'Introdu numele complet (prenume și nume)';
-    if (!email.includes('@') || !email.includes('.'))
-      e.email = 'Email invalid';
-    if (parola.length < 6)
-      e.parola = 'Minim 6 caractere';
-    if (parola !== confirmaParola)
-      e.confirmaParola = 'Parolele nu coincid';
+    if (!nume.trim() || nume.trim().split(" ").length < 2)
+      e.nume = "Introdu numele complet (prenume și nume)";
+    if (!email.includes("@") || !email.includes(".")) e.email = "Email invalid";
+    if (parola.length < 6) e.parola = "Minim 6 caractere";
+    if (parola !== confirmaParola) e.confirmaParola = "Parolele nu coincid";
     if (!acordPrivacitate)
-      e.acord = 'Trebuie să accepți politica de confidențialitate';
+      e.acord = "Trebuie să accepți politica de confidențialitate";
     setErori(e);
     return Object.keys(e).length === 0;
   };
@@ -41,23 +67,25 @@ export default function RegisterScreen({ navigation }) {
     if (!valideaza()) return;
     setLoading(true);
     try {
-      const parts = nume.trim().split(' ');
+      const parts = nume.trim().split(" ");
       const firstName = parts[0];
-      const lastName = parts.slice(1).join(' ');
-      // Apel API backend - înlocuiește cu IP-ul serverului tău
-      const res = await fetch('http://192.168.1.1:3000/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const lastName = parts.slice(1).join(" ");
+      const res = await fetch("http://192.168.1.1:3000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password: parola }),
       });
       const data = await res.json();
       if (res.ok) {
-        navigation.replace('AddChild', { parentId: data.id_parent });
+        router.replace({
+          pathname: "/AddChildScreen",
+          params: { parentId: data.id_parent },
+        });
       } else {
-        Alert.alert('Eroare', data.mesaj || 'Înregistrare eșuată');
+        Alert.alert("Eroare", data.mesaj || "Înregistrare eșuată");
       }
     } catch {
-      Alert.alert('Eroare', 'Nu mă pot conecta la server');
+      Alert.alert("Eroare", "Nu mă pot conecta la server");
     } finally {
       setLoading(false);
     }
@@ -65,96 +93,121 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-
-          {/* Header */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.header}>
-            <Text style={styles.logo}>🌟 KinderApp</Text>
-            <Text style={styles.title}>Creează cont</Text>
+            <Text style={styles.logo}>Kinder</Text>
+            <Text style={styles.title}>Crează cont</Text>
             <Text style={styles.subtitle}>Înregistrează-te ca părinte</Text>
           </View>
 
-          {/* Card formular */}
           <View style={styles.card}>
-
             <CampInput
               label="Nume complet"
               icon="👤"
               placeholder="ex: Maria Popescu"
               value={nume}
-              onChangeText={(t) => { setNume(t); setErori({ ...erori, nume: null }); }}
+              onChangeText={(t) => {
+                setNume(t);
+                setErori({ ...erori, nume: null });
+              }}
               eroare={erori.nume}
             />
-
             <CampInput
               label="Email"
               icon="📧"
               placeholder="adresa@email.com"
               value={email}
-              onChangeText={(t) => { setEmail(t); setErori({ ...erori, email: null }); }}
+              onChangeText={(t) => {
+                setEmail(t);
+                setErori({ ...erori, email: null });
+              }}
               keyboardType="email-address"
               autoCapitalize="none"
               eroare={erori.email}
             />
-
             <CampInput
               label="Parolă"
               icon="🔒"
               placeholder="min. 6 caractere"
               value={parola}
-              onChangeText={(t) => { setParola(t); setErori({ ...erori, parola: null }); }}
+              onChangeText={(t) => {
+                setParola(t);
+                setErori({ ...erori, parola: null });
+              }}
               secureTextEntry={!aratParola}
               eroare={erori.parola}
               iconDreapta={
                 <TouchableOpacity onPress={() => setAratParola(!aratParola)}>
-                  <Text style={{ fontSize: 18 }}>{aratParola ? '🙈' : '👁️'}</Text>
+                  <Text style={{ fontSize: 18 }}>
+                    {aratParola ? "🙈" : "👁️"}
+                  </Text>
                 </TouchableOpacity>
               }
             />
-
             <CampInput
               label="Confirmă parola"
               icon="🔒"
               placeholder="repetă parola"
               value={confirmaParola}
-              onChangeText={(t) => { setConfirmaParola(t); setErori({ ...erori, confirmaParola: null }); }}
+              onChangeText={(t) => {
+                setConfirmaParola(t);
+                setErori({ ...erori, confirmaParola: null });
+              }}
               secureTextEntry={!aratParola}
               eroare={erori.confirmaParola}
             />
 
-            {/* Checkbox acord */}
             <TouchableOpacity
               style={styles.checkboxRow}
-              onPress={() => { setAcordPrivacitate(!acordPrivacitate); setErori({ ...erori, acord: null }); }}
+              onPress={() => {
+                setAcordPrivacitate(!acordPrivacitate);
+                setErori({ ...erori, acord: null });
+              }}
             >
-              <View style={[styles.checkbox, acordPrivacitate && styles.checkboxActiv]}>
-                {acordPrivacitate && <Text style={{ color: 'white', fontSize: 10 }}>✓</Text>}
+              <View
+                style={[
+                  styles.checkbox,
+                  acordPrivacitate && styles.checkboxActiv,
+                ]}
+              >
+                {acordPrivacitate && (
+                  <Text style={{ color: "white", fontSize: 10 }}>✓</Text>
+                )}
               </View>
               <Text style={styles.checkboxText}>
-                Sunt de acord cu{' '}
+                Sunt de acord cu{" "}
                 <Text style={styles.link}>Politica de Confidențialitate</Text>
               </Text>
             </TouchableOpacity>
             {erori.acord && <Text style={styles.eroare}>{erori.acord}</Text>}
 
-            {/* Buton */}
             <TouchableOpacity
               style={[styles.btnPrimary, loading && { opacity: 0.7 }]}
               onPress={handleRegister}
               disabled={loading}
             >
-              {loading
-                ? <ActivityIndicator color="white" />
-                : <Text style={styles.btnText}>Creare cont →</Text>
-              }
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.btnText}>Creare cont →</Text>
+              )}
             </TouchableOpacity>
 
-            {/* Link login */}
-            <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.linkRow}>
-              <Text style={styles.linkText}>Ai deja cont? <Text style={styles.link}>Autentifică-te</Text></Text>
+            <TouchableOpacity
+              onPress={() => setActiveScreen("Login")}
+              style={styles.linkRow}
+            >
+              <Text style={styles.linkText}>
+                Ai deja cont? <Text style={styles.link}>Autentifică-te</Text>
+              </Text>
             </TouchableOpacity>
-
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -165,35 +218,39 @@ export default function RegisterScreen({ navigation }) {
 // ============================================
 // LOGIN SCREEN
 // ============================================
-export function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [parola, setParola] = useState('');
+function LoginScreen({ setActiveScreen }) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [parola, setParola] = useState("");
   const [aratParola, setAratParola] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erori, setErori] = useState({});
 
   const handleLogin = async () => {
     let e = {};
-    if (!email.includes('@')) e.email = 'Email invalid';
-    if (!parola) e.parola = 'Parola este obligatorie';
+    if (!email.includes("@")) e.email = "Email invalid";
+    if (!parola) e.parola = "Parola este obligatorie";
     setErori(e);
     if (Object.keys(e).length > 0) return;
 
     setLoading(true);
     try {
-      const res = await fetch('http://192.168.1.1:3000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("http://192.168.1.1:3000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password: parola }),
       });
       const data = await res.json();
       if (res.ok) {
-        navigation.replace('Dashboard', { parinte: data.parinte });
+        router.replace({
+          pathname: "/MainScreens",
+          params: { parinte: JSON.stringify(data.parinte) },
+        });
       } else {
-        Alert.alert('Eroare', data.mesaj || 'Email sau parolă greșită');
+        Alert.alert("Eroare", data.mesaj || "Email sau parolă greșită");
       }
     } catch {
-      Alert.alert('Eroare', 'Nu mă pot conecta la server');
+      Alert.alert("Eroare", "Nu mă pot conecta la server");
     } finally {
       setLoading(false);
     }
@@ -201,11 +258,16 @@ export function LoginScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.header}>
-            <Text style={styles.logo}>🌟 KinderApp</Text>
+            <Text style={styles.logo}>Kinder</Text>
             <Text style={styles.title}>Bun venit! 👋</Text>
             <Text style={styles.subtitle}>Intră în contul tău de părinte</Text>
           </View>
@@ -216,29 +278,38 @@ export function LoginScreen({ navigation }) {
               icon="📧"
               placeholder="adresa@email.com"
               value={email}
-              onChangeText={(t) => { setEmail(t); setErori({ ...erori, email: null }); }}
+              onChangeText={(t) => {
+                setEmail(t);
+                setErori({ ...erori, email: null });
+              }}
               keyboardType="email-address"
               autoCapitalize="none"
               eroare={erori.email}
             />
-
             <CampInput
               label="Parolă"
               icon="🔒"
               placeholder="parola ta"
               value={parola}
-              onChangeText={(t) => { setParola(t); setErori({ ...erori, parola: null }); }}
+              onChangeText={(t) => {
+                setParola(t);
+                setErori({ ...erori, parola: null });
+              }}
               secureTextEntry={!aratParola}
               eroare={erori.parola}
               iconDreapta={
                 <TouchableOpacity onPress={() => setAratParola(!aratParola)}>
-                  <Text style={{ fontSize: 18 }}>{aratParola ? '🙈' : '👁️'}</Text>
+                  <Text style={{ fontSize: 18 }}>
+                    {aratParola ? "🙈" : "👁️"}
+                  </Text>
                 </TouchableOpacity>
               }
             />
 
             <TouchableOpacity style={styles.linkRow}>
-              <Text style={[styles.link, { textAlign: 'right' }]}>Ai uitat parola?</Text>
+              <Text style={[styles.link, { textAlign: "right" }]}>
+                Ai uitat parola?
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -246,17 +317,22 @@ export function LoginScreen({ navigation }) {
               onPress={handleLogin}
               disabled={loading}
             >
-              {loading
-                ? <ActivityIndicator color="white" />
-                : <Text style={styles.btnText}>Intră în cont →</Text>
-              }
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.btnText}>Intră în cont →</Text>
+              )}
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.linkRow}>
-              <Text style={styles.linkText}>Nu ai cont? <Text style={styles.link}>Creează unul</Text></Text>
+            <TouchableOpacity
+              onPress={() => setActiveScreen("Register")}
+              style={styles.linkRow}
+            >
+              <Text style={styles.linkText}>
+                Nu ai cont? <Text style={styles.link}>Creează unul</Text>
+              </Text>
             </TouchableOpacity>
           </View>
-
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -272,7 +348,12 @@ function CampInput({ label, icon, iconDreapta, eroare, ...props }) {
       <Text style={styles.label}>{label}</Text>
       <View style={[styles.inputBox, eroare && styles.inputEroare]}>
         <Text style={styles.inputIcon}>{icon}</Text>
-        <TextInput style={styles.input} placeholderTextColor={COLORS.textLight} autoCorrect={false} {...props} />
+        <TextInput
+          style={styles.input}
+          placeholderTextColor={COLORS.textLight}
+          autoCorrect={false}
+          {...props}
+        />
         {iconDreapta}
       </View>
       {eroare && <Text style={styles.eroare}>⚠️ {eroare}</Text>}
@@ -283,12 +364,20 @@ function CampInput({ label, icon, iconDreapta, eroare, ...props }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scroll: { paddingHorizontal: 24, paddingBottom: 32 },
-
-  header: { alignItems: 'center', paddingTop: 32, marginBottom: 24 },
-  logo: { fontSize: FONTS.medium, fontWeight: '700', color: COLORS.primary, marginBottom: 12 },
-  title: { fontSize: FONTS.hero, fontWeight: '800', color: COLORS.textDark, marginBottom: 4 },
+  header: { alignItems: "center", paddingTop: 32, marginBottom: 24 },
+  logo: {
+    fontSize: FONTS.hero,
+    fontWeight: "800",
+    color: COLORS.primary,
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: FONTS.hero,
+    fontWeight: "800",
+    color: COLORS.textDark,
+    marginBottom: 4,
+  },
   subtitle: { fontSize: FONTS.body, color: COLORS.textMedium },
-
   card: {
     backgroundColor: COLORS.card,
     borderRadius: RADIUS.large,
@@ -299,12 +388,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 12,
   },
-
   campContainer: { marginBottom: 16 },
-  label: { fontSize: FONTS.small, fontWeight: '700', color: COLORS.textDark, marginBottom: 6 },
+  label: {
+    fontSize: FONTS.small,
+    fontWeight: "700",
+    color: COLORS.textDark,
+    marginBottom: 6,
+  },
   inputBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.background,
     borderRadius: RADIUS.medium,
     borderWidth: 1.5,
@@ -312,30 +405,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 52,
   },
-  inputEroare: { borderColor: COLORS.error, backgroundColor: '#FFF5F5' },
+  inputEroare: { borderColor: COLORS.error, backgroundColor: "#FFF5F5" },
   inputIcon: { fontSize: 18, marginRight: 10 },
   input: { flex: 1, fontSize: FONTS.body, color: COLORS.textDark },
-  eroare: { color: COLORS.error, fontSize: 11, fontWeight: '600', marginTop: 4 },
-
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  eroare: {
+    color: COLORS.error,
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
   checkbox: {
-    width: 22, height: 22,
+    width: 22,
+    height: 22,
     borderRadius: 6,
     borderWidth: 2,
     borderColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  checkboxActiv: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  checkboxActiv: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
   checkboxText: { fontSize: FONTS.small, color: COLORS.textMedium, flex: 1 },
-  link: { color: COLORS.primary, fontWeight: '700' },
-
+  link: { color: COLORS.primary, fontWeight: "700" },
   btnPrimary: {
     backgroundColor: COLORS.primary,
     borderRadius: RADIUS.full,
     height: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 8,
     elevation: 4,
     shadowColor: COLORS.primary,
@@ -343,8 +448,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 8,
   },
-  btnText: { color: COLORS.white, fontSize: FONTS.medium, fontWeight: '800' },
-
-  linkRow: { alignItems: 'center', marginTop: 16 },
+  btnText: { color: COLORS.white, fontSize: FONTS.medium, fontWeight: "800" },
+  linkRow: { alignItems: "center", marginTop: 16 },
   linkText: { fontSize: FONTS.body, color: COLORS.textMedium },
 });
