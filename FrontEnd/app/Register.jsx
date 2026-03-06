@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
@@ -43,29 +42,45 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!valideaza()) return;
     setLoading(true);
-    try {
-      const parts = nume.trim().split(" ");
-      const firstName = parts[0];
-      const lastName = parts.slice(1).join(" ");
-      const res = await fetch("http://192.168.1.1:3000/api/Register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password: parola }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        router.replace({
-          pathname: "/AddChildScreen",
-          params: { parentId: data.id_parent },
-        });
-      } else {
-        Alert.alert("Eroare", data.mesaj || "Înregistrare eșuată");
-      }
-    } catch {
-      Alert.alert("Eroare", "Nu mă pot conecta la server");
-    } finally {
-      setLoading(false);
-    }
+
+    // ================================================
+    // COD REAL - decommenteaza cand backul e gata
+    // si inlocuieste IP_BACKEND cu ip-ul primit
+    // ================================================
+    // try {
+    //   const parts = nume.trim().split(" ");
+    //   const firstName = parts[0];
+    //   const lastName = parts.slice(1).join(" ");
+    //   const res = await fetch("http://IP_BACKEND:3000/api/register", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ firstName, lastName, email, password: parola }),
+    //   });
+    //   const data = await res.json();
+    //   if (res.ok) {
+    //     router.replace({
+    //       pathname: "/AddChildScreen",
+    //       params: { parentId: data.id_parent },
+    //     });
+    //   } else {
+    //     Alert.alert("Eroare", data.mesaj || "Înregistrare eșuată");
+    //   }
+    // } catch {
+    //   Alert.alert("Eroare", "Nu mă pot conecta la server");
+    // } finally {
+    //   setLoading(false);
+    // }
+
+    // ================================================
+    // ILUZIE TEMPORARA - sterge blocul asta
+    // cand decommentezi codul real de mai sus
+    // ================================================
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    router.replace({
+      pathname: "/AddChildScreen",
+      params: { parentId: 1 },
+    });
+    setLoading(false);
   };
 
   return (

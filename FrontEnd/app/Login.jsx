@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -32,26 +31,49 @@ export default function LoginScreen() {
     if (Object.keys(e).length > 0) return;
 
     setLoading(true);
-    try {
-      const res = await fetch("http://192.168.1.1:3000/api/Login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: parola }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        router.replace({
-          pathname: "/MainScreens",
-          params: { parinte: JSON.stringify(data.parinte) },
-        });
-      } else {
-        Alert.alert("Eroare", data.mesaj || "Email sau parolă greșită");
-      }
-    } catch {
-      Alert.alert("Eroare", "Nu mă pot conecta la server");
-    } finally {
-      setLoading(false);
-    }
+
+    // ================================================
+    // COD REAL - decommenteaza cand backul e gata
+    // si inlocuieste IP_BACKEND cu ip-ul primit
+    // ================================================
+    // try {
+    //   const res = await fetch("http://IP_BACKEND:3000/api/login", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ email, password: parola }),
+    //   });
+    //   const data = await res.json();
+    //   if (res.ok) {
+    //     router.replace({
+    //       pathname: "/MainScreens",
+    //       params: { parinte: JSON.stringify(data.parinte) },
+    //     });
+    //   } else {
+    //     Alert.alert("Eroare", data.mesaj || "Email sau parolă greșită");
+    //   }
+    // } catch {
+    //   Alert.alert("Eroare", "Nu mă pot conecta la server");
+    // } finally {
+    //   setLoading(false);
+    // }
+
+    // ================================================
+    // ILUZIE TEMPORARA - sterge blocul asta
+    // cand decommentezi codul real de mai sus
+    // ================================================
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    router.replace({
+      pathname: "/MainScreens",
+      params: {
+        parinte: JSON.stringify({
+          id_parent: 1,
+          first_name: "Maria",
+          last_name: "Popescu",
+          email: email,
+        }),
+      },
+    });
+    setLoading(false);
   };
 
   return (
