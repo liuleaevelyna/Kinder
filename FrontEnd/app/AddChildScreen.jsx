@@ -78,7 +78,7 @@ export default function AddChildScreen() {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     router.replace({
-      pathname: "/MainScreens",
+      pathname: "/Dashboard",
       params: { parentId: parentId || 1 },
     });
     setLoading(false);
